@@ -4,17 +4,16 @@
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
-if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-         source /etc/profile.d/vte.sh
-fi
+
 # If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+export GOPATH=$HOME/go
+export GOBIN=$GOPATH/bin
+# export TF-LOG=trace
+export PATH=$HOME/bin:/usr/local/bin:/usr/local/go/bin:$GOBIN:$PATH
+
 
 # Path to your oh-my-zsh installation.
 export ZSH="/home/degor/.oh-my-zsh"
-export GOPATH=$HOME/go
-export GOBIN=$GOPATH/bin
-export PATH=$PATH:$GOPATH/bin:/usr/local/go/bin
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -45,7 +44,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # export UPDATE_ZSH_DAYS=13
 
 # Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
+# DISABLE_MAGIC_FUNCTIONS=true
 
 # Uncomment the following line to disable colors in ls.
 # DISABLE_LS_COLORS="true"
@@ -80,9 +79,9 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git
+plugins=(
+	git
 	git-flow
-	git-flow-completion
 	zsh-syntax-highlighting
 	zsh-autosuggestions
 	docker
@@ -93,14 +92,14 @@ plugins=(git
 	kubectl
 	ansible
 	colorize
-	copydir
+	copypath
 	encode64
 	extract
 	gcloud
 	helm
 	terraform
 	vscode
-	)
+)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -130,42 +129,49 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-
-
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-# [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C /usr/bin/terraform terraform
+
+autoload -Uz compinit
+compinit
+
+complete -o nospace -C /usr/local/bin/terraform terraform
 
 fpath+=(~/.config/hcloud/completion/zsh)
-autoload -Uz compinit; compinit
+source <(kubectl completion zsh)
 
 source <(doctl completion zsh)
 
-export EDITOR=/bin/nano
+# The next line updates PATH for Yandex Cloud CLI.
+if [ -f '/home/degor/yandex-cloud/path.bash.inc' ]; then source '/home/degor/yandex-cloud/path.bash.inc'; fi
 
-export K9S_EDITOR=/bin/nano
+# The next line enables shell command completion for yc.
+if [ -f '/home/degor/yandex-cloud/completion.zsh.inc' ]; then source '/home/degor/yandex-cloud/completion.zsh.inc'; fi
+
+
+if [ $commands[helm] ]; then
+  source <(helm completion zsh)
+fi
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/home/degor/google-cloud-sdk/path.zsh.inc' ]; then . '/home/degor/google-cloud-sdk/path.zsh.inc'; fi
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/home/degor/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/degor/google-cloud-sdk/completion.zsh.inc'; fi
 
+export EDITOR=/bin/nano
+export KUBE_EDITOR=/bin/nano
 
-source ~/.helmrc
-
-# Added by serverless binary installer
-export PATH="$HOME/.serverless/bin:$PATH"
-
-source <(npm completion zsh)
-
-alias tfa='terraform apply'
-alias tfd='terraform destroy'
+alias tfa='terraform apply -auto-approve'
+alias tfd='terraform destroy -auto-approve'
 alias tfsl='terraform state list'
 alias tfss='terraform state show'
 alias tfr='terraform refresh'
+alias tfp='terraform plan'
+alias tfv='terraform validate'
+alias tfo='terraform output'
+alias tfc='terraform console'
+alias tff='terraform fmt'
+
+alias c='clear'
